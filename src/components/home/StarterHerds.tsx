@@ -1,14 +1,15 @@
 import Link from 'next/link';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLayerGroup, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faLayerGroup, faArrowRight, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
-// Interface for what a Template looks like (to be moved to src/data later)
+// Interface for what a Template looks like
 export interface Template {
   id: string;
   title: string;
   description: string;
   category: string;
-  image?: string; // Optional thumbnail
+  image?: string;
 }
 
 interface StarterHerdsProps {
@@ -17,6 +18,13 @@ interface StarterHerdsProps {
 
 export function StarterHerds({ templates = [] }: StarterHerdsProps) {
   const hasTemplates = templates.length > 0;
+
+  // GitHub Issue Prefill Logic
+  const issueTitle = encodeURIComponent('New Herd Template');
+  const issueBody = encodeURIComponent(
+    'Template Title: \nDescription: \nCategory: \nImage Link (optional): \n'
+  );
+  const submitUrl = `https://github.com/OneBuffaloLabs/herd-rank/issues/new?title=${issueTitle}&body=${issueBody}`;
 
   return (
     <section id="templates" className="px-6 max-w-7xl mx-auto w-full mb-24">
@@ -28,13 +36,25 @@ export function StarterHerds({ templates = [] }: StarterHerdsProps) {
           </p>
         </div>
 
-        {hasTemplates && (
-          <Link
-            href="/templates"
-            className="text-sm font-bold text-brand-primary hover:text-brand-text transition-colors flex items-center gap-2">
-            View All <FontAwesomeIcon icon={faArrowRight} />
-          </Link>
-        )}
+        <div className="flex items-center gap-4">
+          {/* Header Link (Visible if templates exist) */}
+          {hasTemplates && (
+            <>
+              <a
+                href={submitUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-brand-primary hover:text-brand-text transition-colors flex items-center gap-2">
+                <FontAwesomeIcon icon={faPlus} /> Submit Template
+              </a>
+              <Link
+                href="/templates"
+                className="text-sm font-bold text-brand-text hover:text-brand-primary transition-colors flex items-center gap-2">
+                View All <FontAwesomeIcon icon={faArrowRight} />
+              </Link>
+            </>
+          )}
+        </div>
       </div>
 
       {!hasTemplates ? (
@@ -44,13 +64,22 @@ export function StarterHerds({ templates = [] }: StarterHerdsProps) {
             <FontAwesomeIcon icon={faLayerGroup} className="text-2xl text-brand-text-muted/50" />
           </div>
           <h3 className="text-lg font-bold text-brand-text mb-2">Curating the Collection</h3>
-          <p className="text-brand-text-muted max-w-md mx-auto leading-relaxed">
-            We're hand-picking the best community templates to help you start ranking faster. Check
-            back soon for herds like "Top 100 Movies" or "Best 90s Sitcoms."
+          <p className="text-brand-text-muted max-w-md mx-auto leading-relaxed mb-6">
+            We're hand-picking the best community templates to help you start ranking faster. Have a
+            great idea for a template? Let us know.
           </p>
+
+          <a
+            href={submitUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold rounded-lg transition-colors shadow-lg shadow-brand-primary/20">
+            <FontAwesomeIcon icon={faGithub} />
+            Submit Template
+          </a>
         </div>
       ) : (
-        // --- Template Grid (Future Proofing) ---
+        // --- Template Grid ---
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {templates.map((template) => (
             <div
