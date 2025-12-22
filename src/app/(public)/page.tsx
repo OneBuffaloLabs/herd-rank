@@ -8,6 +8,7 @@ import { db } from '@/db';
 import { Hero } from '@/components/home/Hero';
 import { RecentsDashboard } from '@/components/home/RecentsDashboard';
 import { FeatureGrid } from '@/components/home/FeatureGrid';
+import { StarterHerds } from '@/components/home/StarterHerds'; // <--- New Import
 import { CommunityReel } from '@/components/home/CommunityReel';
 import { PitchForm } from '@/components/home/PitchForm';
 import { LandingFooter } from '@/components/home/LandingFooter';
@@ -24,7 +25,10 @@ export default function AdaptiveHomepage() {
     <div className="w-full min-h-screen bg-brand-bg text-brand-text font-sans selection:bg-brand-primary selection:text-white flex flex-col">
       <Hero />
       <FeatureGrid />
+      <StarterHerds templates={[]} />
+
       {mounted && <RecentsDashboard boards={recentBoards} />}
+
       <CommunityReel />
       <PitchForm />
       <LandingFooter />
