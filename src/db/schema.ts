@@ -1,4 +1,4 @@
-import Dexie, { type EntityTable } from 'dexie';
+import { type EntityTable } from 'dexie';
 
 export interface TierItem {
   id: string;
@@ -31,16 +31,3 @@ export interface TierBoard {
   // The "Stable" (Items uploaded but not ranked)
   unranked: string[];
 }
-
-const db = new Dexie('HerdRankDB') as Dexie & {
-  boards: EntityTable<TierBoard, 'id'>;
-  items: EntityTable<TierItem, 'id'>;
-};
-
-// Indexing 'updatedAt' allows for lightning-fast sorting on the Home page
-db.version(2).stores({
-  boards: 'id, title, updatedAt',
-  items: 'id',
-});
-
-export { db };
