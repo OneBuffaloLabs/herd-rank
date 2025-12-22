@@ -27,6 +27,17 @@ export function FeatureGrid() {
 
   return (
     <section id="features" className="px-6 max-w-7xl mx-auto w-full mb-24">
+      {/* New Header Section */}
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <h2 className="text-3xl md:text-4xl font-bold text-brand-text mb-4">
+          The <span className="text-brand-primary">Competitive Edge</span> You Need.
+        </h2>
+        <p className="text-brand-text-muted text-lg">
+          Most ranking tools are slow, riddled with ads, and demand your personal data. We built the
+          opposite: a professional-grade engine that runs entirely on your machine.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {features.map((feature, i) => (
           <div

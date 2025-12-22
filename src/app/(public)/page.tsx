@@ -13,11 +13,9 @@ import { PitchForm } from '@/components/home/PitchForm';
 import { LandingFooter } from '@/components/home/LandingFooter';
 
 export default function AdaptiveHomepage() {
-  // --- Data Layer: Dexie.js Integration ---
   const recentBoards = useLiveQuery(() => db.getRecentBoards(4), []);
   const [mounted, setMounted] = useState(false);
 
-  // Prevent hydration mismatch for local storage
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -25,10 +23,8 @@ export default function AdaptiveHomepage() {
   return (
     <div className="w-full min-h-screen bg-brand-bg text-brand-text font-sans selection:bg-brand-primary selection:text-white flex flex-col">
       <Hero />
-
-      {mounted && <RecentsDashboard boards={recentBoards} />}
-
       <FeatureGrid />
+      {mounted && <RecentsDashboard boards={recentBoards} />}
       <CommunityReel />
       <PitchForm />
       <LandingFooter />
