@@ -78,8 +78,8 @@ export default function NotFound() {
           </h1>
 
           <p className="text-lg text-brand-text-muted max-w-lg mx-auto leading-relaxed">
-            We couldn't find the page you're looking for. It might have been deleted, moved, or
-            perhaps it only exists in a different herd's local storage.
+            We couldn&apos;t find the page you&apos;re looking for. It might have been deleted,
+            moved, or perhaps it only exists in a different herd&apos;s local storage.
           </p>
         </div>
 

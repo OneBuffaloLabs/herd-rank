@@ -40,8 +40,8 @@ export default function PrivacyPolicy() {
             </h1>
           </div>
           <p className="text-lg text-text-muted max-w-2xl leading-relaxed">
-            At HerdRank, we believe privacy isn't a feature—it's the foundation. We've built this
-            tool so your data never leaves your sight.
+            At HerdRank, we believe privacy isn&apos;t a feature&mdash;it&apos;s the foundation.
+            We&apos;ve built this tool so your data never leaves your sight.
           </p>
           <div className="mt-6 inline-block px-3 py-1 bg-brand-surface border border-brand-secondary/50 rounded-md text-xs font-mono">
             Last Updated: {lastUpdated}
@@ -56,11 +56,11 @@ export default function PrivacyPolicy() {
           <div className="bg-brand-surface border border-brand-secondary/20 p-8 rounded-2xl shadow-xl">
             <h2 className="text-2xl font-bold text-text-main mb-6 flex items-center gap-3">
               <FontAwesomeIcon icon={faLock} className="text-brand-primary text-xl" />
-              The "Local-First" Guarantee
+              The &quot;Local-First&quot; Guarantee
             </h2>
             <p className="leading-relaxed mb-4">
               HerdRank is a <strong>Local-First</strong> application. This means 100% of your tier
-              lists, uploaded images, and ranking data are stored directly in your browser's
+              lists, uploaded images, and ranking data are stored directly in your browser&apos;s
               internal database (IndexedDB).
             </p>
             <ul className="grid gap-4 mt-6">
@@ -90,19 +90,20 @@ export default function PrivacyPolicy() {
             <article>
               <h3 className="text-xl font-bold text-text-main mb-4">1. Information Collection</h3>
               <p className="leading-relaxed">
-                We do not collect personal information. When you use the app, the only "data"
-                generated is the ranking data you create, which stays on your device. We may collect
-                anonymous, aggregate usage data via our own self-hosted analytics to improve
-                performance, but this is never tied to your identity.
+                We do not collect personal information. When you use the app, the only
+                &quot;data&quot; generated is the ranking data you create, which stays on your
+                device. We may collect anonymous, aggregate usage data via our own self-hosted
+                analytics to improve performance, but this is never tied to your identity.
               </p>
             </article>
 
             <article>
               <h3 className="text-xl font-bold text-text-main mb-4">2. Data Persistence</h3>
               <p className="leading-relaxed">
-                Because data is stored locally, clearing your browser cache or "Site Data" for
-                HerdRank will permanently delete your boards. We recommend using the "Export"
-                feature regularly to save backups of your herds to your physical drive.
+                Because data is stored locally, clearing your browser cache or &quot;Site Data&quot;
+                for HerdRank will permanently delete your boards. We recommend using the
+                &quot;Export&quot; feature regularly to save backups of your herds to your physical
+                drive.
               </p>
             </article>
 

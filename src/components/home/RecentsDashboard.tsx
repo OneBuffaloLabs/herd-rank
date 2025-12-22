@@ -40,7 +40,7 @@ export function RecentsDashboard({ boards }: RecentsDashboardProps) {
           </div>
           <h3 className="text-lg font-semibold text-brand-text mb-2">Create your first Herd</h3>
           <p className="text-brand-text-muted mb-0">
-            Your stable is empty. Pick a topic and let's go.
+            Your stable is empty. Pick a topic and let&apos;s go.
           </p>
         </div>
       ) : (

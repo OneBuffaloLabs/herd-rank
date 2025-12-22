@@ -1,17 +1,16 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlay, faVideo, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 
 // Import data directly (ensure src/data/community-reels.json exists)
-// If you haven't created the file yet, this import will error.
 import reelsData from '@/data/community-reels.json';
 
-// Define the shape of a Reel entry
 interface CommunityReel {
   id: string;
   thumbnail: string;
-  link: string; // URL to TikTok/Reel/Short
+  link: string;
   author: string;
 }
 
@@ -32,7 +31,6 @@ export function CommunityReel() {
         <h2 className="text-2xl font-bold text-brand-text">Herds in the Wild</h2>
 
         <div className="flex items-center gap-4">
-          {/* If populated, show a small submit link in header too */}
           {hasReels && (
             <a
               href={submitUrl}
@@ -49,7 +47,6 @@ export function CommunityReel() {
       </div>
 
       {!hasReels ? (
-        // --- Empty State (Coming Soon) ---
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-brand-bg/50 border border-dashed border-brand-text/10 rounded-xl p-12 text-center">
             <div className="w-16 h-16 bg-brand-bg rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-text/5">
@@ -58,7 +55,7 @@ export function CommunityReel() {
 
             <h3 className="text-lg font-bold text-brand-text mb-2">Community Reels Coming Soon</h3>
             <p className="text-brand-text-muted max-w-md mx-auto leading-relaxed mb-6">
-              We're waiting for the first herds to be spotted in the wild. Show us how you use
+              We&apos;re waiting for the first herds to be spotted in the wild. Show us how you use
               HerdRank and get featured here.
             </p>
 
@@ -73,7 +70,6 @@ export function CommunityReel() {
           </div>
         </div>
       ) : (
-        // --- Populated State (Horizontal Scroll) ---
         <div className="flex gap-6 overflow-x-auto px-6 pb-4 scrollbar-hide snap-x">
           {reels.map((reel) => (
             <Link
@@ -81,21 +77,20 @@ export function CommunityReel() {
               href={reel.link}
               target="_blank"
               className="snap-center shrink-0 w-[240px] aspect-[9/16] bg-brand-bg rounded-xl border border-brand-text/10 relative group cursor-pointer hover:border-brand-accent transition-colors overflow-hidden">
-              {/* Thumbnail Image */}
-              <img
+              <Image
                 src={reel.thumbnail}
                 alt={`Reel by ${reel.author}`}
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+                fill
+                className="object-cover opacity-60 group-hover:opacity-80 transition-opacity"
+                sizes="240px"
               />
 
-              {/* Play Button Overlay */}
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/40 transition-colors z-10">
                 <div className="w-12 h-12 bg-brand-accent rounded-full flex items-center justify-center text-white shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
                   <FontAwesomeIcon icon={faPlay} className="ml-1" />
                 </div>
               </div>
 
-              {/* Author Label */}
               <div className="absolute bottom-4 left-4 right-4 z-10">
                 <p className="text-xs font-bold text-white shadow-black drop-shadow-md">
                   @{reel.author}

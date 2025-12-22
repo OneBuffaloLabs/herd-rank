@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLayerGroup, faArrowRight, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -65,8 +66,8 @@ export function StarterHerds({ templates = [] }: StarterHerdsProps) {
           </div>
           <h3 className="text-lg font-bold text-brand-text mb-2">Curating the Collection</h3>
           <p className="text-brand-text-muted max-w-md mx-auto leading-relaxed mb-6">
-            We're hand-picking the best community templates to help you start ranking faster. Have a
-            great idea for a template? Let us know.
+            We&apos;re hand-picking the best community templates to help you start ranking faster.
+            Have a great idea for a template? Let us know.
           </p>
 
           <a
@@ -86,12 +87,14 @@ export function StarterHerds({ templates = [] }: StarterHerdsProps) {
               key={template.id}
               className="group flex flex-col bg-brand-surface border border-brand-text/5 rounded-xl overflow-hidden hover:border-brand-primary/50 transition-all cursor-pointer">
               {/* Image/Placeholder */}
-              <div className="w-full h-40 bg-brand-bg flex items-center justify-center text-brand-text-muted/30">
+              <div className="w-full h-40 bg-brand-bg flex items-center justify-center text-brand-text-muted/30 relative">
                 {template.image ? (
-                  <img
+                  <Image
                     src={template.image}
                     alt={template.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 ) : (
                   <FontAwesomeIcon icon={faLayerGroup} className="text-4xl" />

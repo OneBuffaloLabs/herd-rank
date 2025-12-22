@@ -44,7 +44,7 @@ export default function TermsOfService() {
             straightforward terms.
           </p>
           <div className="mt-6 inline-block px-3 py-1 bg-brand-surface border border-brand-secondary/50 rounded-md text-xs font-mono">
-            Version 1.0 — {lastUpdated}
+            Version 1.0 &mdash; {lastUpdated}
           </div>
         </div>
       </section>
@@ -66,7 +66,7 @@ export default function TermsOfService() {
                 <p className="text-text-muted leading-relaxed">
                   By accessing or using HerdRank, provided by OneBuffaloLabs, you agree to be bound
                   by these terms. If you do not agree, please do not use the application. This is a
-                  local-first tool provided "as-is" for personal and community use.
+                  local-first tool provided &quot;as-is&quot; for personal and community use.
                 </p>
               </div>
             </div>
@@ -107,8 +107,8 @@ export default function TermsOfService() {
                   Prohibited Use
                 </h2>
                 <p className="text-text-muted leading-relaxed mb-4">
-                  While we don't monitor your local data, any content you share publicly using the
-                  HerdRank name or templates must not:
+                  While we don&apos;t monitor your local data, any content you share publicly using
+                  the HerdRank name or templates must not:
                 </p>
                 <ul className="list-disc pl-5 space-y-2 text-text-muted">
                   <li>Violate any local, state, or international laws.</li>
@@ -126,9 +126,9 @@ export default function TermsOfService() {
               <div className="md:w-3/4">
                 <h2 className="text-2xl font-bold text-text-main mb-4">Disclaimer of Warranty</h2>
                 <p className="text-text-muted leading-relaxed">
-                  HERDRANK IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. ONEBUFFALOLABS SHALL
-                  NOT BE LIABLE FOR ANY DATA LOSS, HARDWARE DAMAGE, OR INDIRECT DAMAGES RESULTING
-                  FROM THE USE OF THIS SOFTWARE.
+                  HERDRANK IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTY OF ANY KIND.
+                  ONEBUFFALOLABS SHALL NOT BE LIABLE FOR ANY DATA LOSS, HARDWARE DAMAGE, OR INDIRECT
+                  DAMAGES RESULTING FROM THE USE OF THIS SOFTWARE.
                 </p>
               </div>
             </div>

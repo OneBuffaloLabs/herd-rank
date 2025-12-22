@@ -22,13 +22,13 @@ export function LandingFooter() {
 
           <div className="text-sm text-brand-text-muted">
             Built by{' '}
-            <Link
+            <a
               href="https://onebuffalolabs.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-brand-primary hover:text-brand-text transition-colors font-medium">
               OneBuffaloLabs
-            </Link>
+            </a>
           </div>
 
           <div className="mt-2 flex items-center gap-2 text-xs text-brand-text-muted/50 font-mono uppercase tracking-widest">
