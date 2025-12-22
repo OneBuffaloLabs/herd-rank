@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: 'https://replace-with-your-site-url.com',
+  siteUrl: 'https://herdrank.onebuffalolabs.com',
   generateRobotsTxt: true,
   trailingSlash: true,
   robotsTxtOptions: {

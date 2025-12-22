@@ -12,14 +12,25 @@ interface PageMetadata {
 }
 
 // --- Base Metadata ---
-const BASE_URL = 'https://google.com';
-const SITE_NAME = '';
-const TWITTER_CREATOR = '';
+const BASE_URL = 'https://herdrank.onebuffalolabs.com';
+const SITE_NAME = 'HerdRank';
+const TWITTER_CREATOR = '@OneBuffaloLabs';
 const GOOGLE_ADSENSE_ACCOUNT = '';
-const DEFAULT_TITLE = '';
-const DEFAULT_DESCRIPTION = '';
-const DEFAULT_OG_IMAGE = ``;
-const DEFAULT_KEYWORDS = [''];
+const DEFAULT_TITLE = 'HerdRank | The Local-First Tier List Maker';
+const DEFAULT_DESCRIPTION =
+  'A high-performance, privacy-focused tier list maker. No accounts, no servers—just high-performance ranking that stays in your browser.';
+const DEFAULT_OG_IMAGE = `${BASE_URL}/og-image.png`;
+const DEFAULT_KEYWORDS = [
+  'HerdRank',
+  'OneBuffaloLabs',
+  'Tier List Maker',
+  'Local-First',
+  'Privacy-Focused',
+  'Next.js 15',
+  'Tailwind 4',
+  'TierMaker Clone',
+  'Buffalo Tech',
+];
 
 /**
  * Generates metadata for a page, merging with site-wide defaults.
@@ -91,9 +102,9 @@ export function generateMetadata({
       type: 'website',
     },
     ...(Object.keys(otherMetadata).length > 0 && { other: otherMetadata }),
-  };  
+  };
 
-if (TWITTER_CREATOR) {
+  if (TWITTER_CREATOR) {
     metadata.twitter = {
       card: 'summary_large_image',
       title: pageTitle,

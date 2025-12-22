@@ -1,7 +1,7 @@
 {
-  "name": "site-name",
-  "short_name": "site-name",
-  "description": "",
+  "name": "HerdRank",
+  "short_name": "HerdRank",
+  "description": "A high-performance, privacy-focused tier list maker that keeps your data local.",
   "start_url": "/",
   "icons": [
     {
@@ -17,7 +17,9 @@
       "purpose": "any maskable"
     }
   ],
-  "theme_color": "#FFFFFF",
-  "background_color": "#FFFFFF",
-  "display": "standalone"
+  "theme_color": "#00338D",
+  "background_color": "#00338D",
+  "display": "standalone",
+  "orientation": "any",
+  "scope": "/"
 }
