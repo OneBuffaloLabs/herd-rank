@@ -1,11 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Default: Electric Tundra */
+  /* Modern Tundra Theme Map */
+  --color-brand-bg: var(--bg);
+  --color-brand-surface: var(--surface); /* New: Cards/Sections */
   --color-brand-primary: var(--primary);
   --color-brand-accent: var(--accent);
-  --color-brand-bg: var(--bg);
+  --color-brand-ambient: var(--ambient); /* New: Glows/Borders */
   --color-brand-text: var(--text);
+  --color-brand-text-muted: var(--text-muted); /* New: Subtitles */
 
   /* OBL Core Branding */
   --color-obl-red: #e7042d;
@@ -14,23 +17,32 @@
 }
 
 :root {
-  /* Electric Tundra (Default) */
-  --bg: #00338d;
-  --primary: #0053d5;
-  --accent: #c60c30;
-  --text: #f2f2f2;
+  /* Modern Tundra (Default) */
+  --bg: #09090b; /* Deep Midnight Zinc */
+  --surface: #18181b; /* Slate Charcoal */
+  --primary: #0053d5; /* Electric Blue */
+  --accent: #c60c30; /* Charging Red */
+  --ambient: #00338d; /* Deep Navy (used for subtle glows/borders) */
+  --text: #fafafa; /* High-Contrast Ice */
+  --text-muted: #a1a1aa; /* Muted Silver */
 }
 
 [data-theme='steel'] {
   --bg: #1a1a1b;
+  --surface: #27272a;
   --primary: #708090;
   --accent: #ffd700;
+  --ambient: #475569;
   --text: #e5e7eb;
+  --text-muted: #9ca3af;
 }
 
 [data-theme='sunset'] {
   --bg: #3d2b1f;
+  --surface: #5d4037;
   --primary: #ff8c00;
   --accent: #fffdd0;
+  --ambient: #8d6e63;
   --text: #fffdd0;
+  --text-muted: #d7ccc8;
 }

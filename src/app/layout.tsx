@@ -1,27 +1,24 @@
-// --- Next ---
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-// --- Components ---
-// import { Header } from '@/components/Header';
-// import { Footer } from '@/components/Footer';
 import AnalyticsInitializer from '@/components/AnalyticsInitializer';
-// --- Utils ---
-import { generateMetadata } from '@/utils/metadata';
-import { generateViewport } from '@/utils/viewport';
-// --- Styles ---
+import { BottomNav } from '@/components/navigation/BottomNav';
 import './globals.css';
 
-// Font Awesome CSS fix
 import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 config.autoAddCss = false;
 
-// Font Definitions
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
 
-export const metadata: Metadata = generateMetadata();
-export const viewport: Viewport = generateViewport();
+export const metadata: Metadata = {
+  title: 'HerdRank',
+  description: 'Local-first Tier List Maker',
+};
+
+export const viewport: Viewport = {
+  themeColor: '#00338d',
+};
 
 export default function RootLayout({
   children,
@@ -31,10 +28,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen`}>
-        {/* <Header /> */}
-        <main className="flex-grow">{children}</main>
-        {/* <Footer /> */}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased flex flex-col min-h-screen bg-brand-bg text-brand-text`}>
+        {/* Main Content Area */}
+        <div className="flex-grow flex flex-col pb-16 md:pb-0">{children}</div>
+
+        {/* Mobile Global Navigation (Hidden on Desktop) */}
+        <BottomNav />
+
         <AnalyticsInitializer />
       </body>
     </html>
