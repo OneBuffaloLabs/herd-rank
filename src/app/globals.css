@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Default: Electric Tundra */
+  --color-brand-primary: var(--primary);
+  --color-brand-accent: var(--accent);
+  --color-brand-bg: var(--bg);
+  --color-brand-text: var(--text);
+
+  /* OBL Core Branding */
+  --color-obl-red: #e7042d;
+  --color-obl-blue: #003091;
+  --color-obl-dark-blue: #010123;
+}
+
+:root {
+  /* Electric Tundra (Default) */
+  --bg: #00338d;
+  --primary: #0053d5;
+  --accent: #c60c30;
+  --text: #f2f2f2;
+}
+
+[data-theme='steel'] {
+  --bg: #1a1a1b;
+  --primary: #708090;
+  --accent: #ffd700;
+  --text: #e5e7eb;
+}
+
+[data-theme='sunset'] {
+  --bg: #3d2b1f;
+  --primary: #ff8c00;
+  --accent: #fffdd0;
+  --text: #fffdd0;
+}
