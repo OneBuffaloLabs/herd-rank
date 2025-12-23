@@ -1,33 +1,23 @@
-import { type EntityTable } from 'dexie';
+// Define valid board types for the union
+export type BoardType = 'tier' | 'bracket' | 'gauntlet';
 
-export interface TierItem {
-  id: string;
-  blob: Blob;
-  fileName: string;
-  type: string; // e.g., 'image/png'
-  size: number; // Useful for the "Storage Vault" stats page
+// Interface for the Board (The container)
+export interface TierBoard {
+  id?: number; // Auto-incrementing ID
+  title: string; // User-defined title (e.g., "Best 90s Movies")
+  type: BoardType; // The mode (Tier List vs Bracket)
+  currentTheme: string; // Theme ID (e.g., "electric-tundra")
+  createdAt: number; // Timestamp
+  updatedAt: number; // Timestamp (Used for sorting Recents)
+  isArchived?: boolean; // Soft delete flag
 }
 
-export interface TierBoard {
-  id: string;
-  title: string;
-  description?: string; // For the Gallery view
-  currentTheme: 'tundra' | 'steel' | 'sunset';
-  createdAt: number; // Date.now()
-  updatedAt: number; // For sorting the "Recent" herd
-  thumbnail?: string; // Base64 mini-preview for the Gallery
-
-  // The Workspace
-  rows: {
-    id: string;
-    label: string;
-    color: string;
-  }[];
-
-  // Mapping of items to their locations
-  // Key = Row ID, Value = Array of TierItem IDs
-  itemMapping: Record<string, string[]>;
-
-  // The "Stable" (Items uploaded but not ranked)
-  unranked: string[];
+// Interface for Items (The ranked entities)
+export interface TierItem {
+  id?: number; // Auto-incrementing ID
+  boardId: number; // Foreign Key to TierBoard
+  text: string; // Label text
+  imageBlob?: Blob; // Binary data for local images (No URLs required)
+  rank: string; // Current rank ID (e.g., "S", "A", "trash")
+  order: number; // Sort order within the rank
 }
