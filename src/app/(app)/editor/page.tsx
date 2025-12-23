@@ -33,7 +33,6 @@ export default function EditorPage() {
   const isCreatingNew = !boardId;
   const isLoading = !!boardId && !board;
 
-  // Determine if modal should be open (either creating new, or user clicked settings)
   const isModalOpen = isCreatingNew || showEditModal;
 
   const handleCloseModal = () => {
@@ -46,11 +45,12 @@ export default function EditorPage() {
 
   return (
     <div className="min-h-screen bg-brand-bg flex flex-col relative">
-      {/* Modal handles both Create and Edit based on props */}
       <NewHerdModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         initialBoard={showEditModal ? board : undefined}
+        // NEW: Pass items to the modal for editing
+        initialItems={showEditModal ? items : undefined}
       />
 
       {/* Header */}
@@ -71,7 +71,6 @@ export default function EditorPage() {
         </div>
 
         <div className="flex gap-3">
-          {/* Settings Button */}
           {!isCreatingNew && (
             <button
               onClick={() => setShowEditModal(true)}
@@ -122,7 +121,6 @@ export default function EditorPage() {
         )}
       </main>
 
-      {/* Connected Stable with Real Items */}
       <TheStable items={items} />
     </div>
   );

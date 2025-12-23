@@ -13,16 +13,15 @@ import {
   faPalette,
   faExclamationCircle,
   faSave,
+  faPen,
 } from '@fortawesome/free-solid-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/db';
 import { BoardType, TierBoard, TierItem, TierDefinition } from '@/db/schema';
 
-// --- Types ---
 type ModeSelection = BoardType;
 interface TierConfig extends TierDefinition {}
 
-// --- Defaults ---
 const DEFAULT_TIER_COLORS = ['#c60c30', '#ff6b35', '#f7c548', '#3a86ff', '#8338ec', '#a1a1aa'];
 const DEFAULT_TIERS: TierConfig[] = [
   { id: uuidv4(), label: 'S', color: DEFAULT_TIER_COLORS[0] },
@@ -36,24 +35,28 @@ const DEFAULT_TIERS: TierConfig[] = [
 interface NewHerdModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // NEW: Optional props for Edit Mode
   initialBoard?: TierBoard;
+  // NEW: Accept items for editing
+  initialItems?: TierItem[];
 }
 
-export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProps) {
+export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: NewHerdModalProps) {
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   const isEditing = !!initialBoard;
 
-  // --- Form State ---
   const [herdTitle, setHerdTitle] = useState('');
   const [selectedMode, setSelectedMode] = useState<ModeSelection>('tier');
   const [tiers, setTiers] = useState<TierConfig[]>(DEFAULT_TIERS);
   const [stableInput, setStableInput] = useState('');
+
+  // NEW: State for editing existing items
+  const [existingItems, setExistingItems] = useState<TierItem[]>([]);
+  const [deletedItemIds, setDeletedItemIds] = useState<number[]>([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; stable?: string }>({});
 
-  // --- Load Initial Data (Edit Mode) ---
   useEffect(() => {
     if (isOpen && initialBoard) {
       setHerdTitle(initialBoard.title);
@@ -61,17 +64,19 @@ export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProp
       if (initialBoard.tiers) {
         setTiers(initialBoard.tiers);
       }
-      // Note: We do NOT load existing items into stableInput to avoid data loss.
-      // stableInput remains empty for "Add More" functionality.
+      // Load only unranked items for editing
+      if (initialItems) {
+        setExistingItems(initialItems.filter((i) => i.rank === 'unranked'));
+        setDeletedItemIds([]);
+      }
     } else if (isOpen && !initialBoard) {
-      // Reset for Create Mode
       setHerdTitle('');
       setTiers(DEFAULT_TIERS);
       setStableInput('');
+      setExistingItems([]);
     }
-  }, [isOpen, initialBoard]);
+  }, [isOpen, initialBoard, initialItems]);
 
-  // --- Focus Trap ---
   useEffect(() => {
     if (isOpen) {
       modalRef.current?.focus();
@@ -90,7 +95,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProp
 
   if (!isOpen) return null;
 
-  // --- Handlers ---
   const handleAddTier = () => {
     const nextColorIndex = tiers.length % DEFAULT_TIER_COLORS.length;
     setTiers([
@@ -108,18 +112,30 @@ export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProp
     setTiers(tiers.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
   };
 
+  // --- Item Edit Handlers ---
+  const handleExistingItemChange = (id: number, text: string) => {
+    setExistingItems(existingItems.map((i) => (i.id === id ? { ...i, text } : i)));
+  };
+
+  const handleExistingItemDelete = (id: number) => {
+    setExistingItems(existingItems.filter((i) => i.id !== id));
+    setDeletedItemIds([...deletedItemIds, id]);
+  };
+
   const validate = () => {
     const newErrors: { title?: string; stable?: string } = {};
-    const rawItems = stableInput
+    const rawNewItems = stableInput
       .split('\n')
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
 
     if (!herdTitle.trim()) newErrors.title = 'Title is required';
 
-    // Only enforce 3 items on creation, not editing (unless they want to add more)
-    if (!isEditing && rawItems.length < 3) {
-      newErrors.stable = 'Please add at least 3 items to start';
+    // Check total items (existing non-deleted + new)
+    const totalItems = existingItems.length + rawNewItems.length;
+
+    if (totalItems < 3) {
+      newErrors.stable = 'Please have at least 3 items in the stable';
     }
 
     setErrors(newErrors);
@@ -146,18 +162,30 @@ export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProp
             updatedAt: Date.now(),
           });
 
-          // 2. Add NEW items (if any)
+          // 2. Update Changed Existing Items
+          // We only put items that haven't been deleted
+          if (existingItems.length > 0) {
+            await db.items.bulkPut(existingItems);
+          }
+
+          // 3. Delete Removed Items
+          if (deletedItemIds.length > 0) {
+            await db.items.bulkDelete(deletedItemIds);
+          }
+
+          // 4. Add NEW items
           if (rawItems.length > 0) {
             const itemsToAdd: TierItem[] = rawItems.map((text, index) => ({
               boardId: initialBoard.id!,
               text: text,
               rank: 'unranked',
-              order: Date.now() + index, // Ensure they go to end
+              order: Date.now() + index,
             }));
             await db.items.bulkAdd(itemsToAdd);
           }
         });
-        onClose(); // Close modal and stay on page
+        setStableInput(''); // Clear the "Add New" box
+        onClose();
       } else {
         // --- CREATE MODE ---
         const newBoard: TierBoard = {
@@ -333,23 +361,58 @@ export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProp
             </section>
           )}
 
+          {/* EDIT MODE: Manage Existing Items */}
+          {isEditing && existingItems.length > 0 && (
+            <section className="animate-fadeIn">
+              <div className="flex justify-between mb-3">
+                <span className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider">
+                  Manage Existing Stable Items
+                </span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin">
+                {existingItems.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2">
+                    <div className="flex-1 flex items-center bg-brand-bg border border-brand-text/10 rounded-lg px-3 py-2 focus-within:border-brand-primary transition-colors">
+                      <FontAwesomeIcon
+                        icon={faPen}
+                        className="text-xs text-brand-text-muted/30 mr-3"
+                      />
+                      <input
+                        type="text"
+                        value={item.text}
+                        onChange={(e) => handleExistingItemChange(item.id!, e.target.value)}
+                        className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-brand-text placeholder-brand-text/20"
+                      />
+                    </div>
+                    <button
+                      onClick={() => handleExistingItemDelete(item.id!)}
+                      className="w-9 h-9 flex items-center justify-center bg-brand-surface border border-brand-text/10 rounded-lg text-brand-text-muted hover:text-brand-accent hover:border-brand-accent transition-colors cursor-pointer"
+                      title="Remove Item">
+                      <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Stable Init / Add More */}
           <section>
             <div className="flex justify-between mb-3">
               <label
                 htmlFor="stableInput"
                 className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider cursor-pointer">
-                {isEditing ? 'Add More Items' : 'Populate the Stable'}{' '}
+                {isEditing ? 'Add New Items' : 'Populate the Stable'}{' '}
                 <span className={isEditing ? 'hidden' : 'text-brand-accent'}>*</span>
               </label>
               <span
                 className={`text-xs font-bold ${
-                  stableInput.split('\n').filter((s) => s.trim()).length >= 3
+                  stableInput.split('\n').filter((s) => s.trim()).length + existingItems.length >= 3
                     ? 'text-brand-primary'
                     : 'text-brand-text-muted'
                 }`}>
-                {stableInput.split('\n').filter((s) => s.trim()).length}{' '}
-                {isEditing ? 'Adding' : '/ 3 Required'}
+                {stableInput.split('\n').filter((s) => s.trim()).length + existingItems.length}{' '}
+                {isEditing ? 'Total Items' : '/ 3 Required'}
               </span>
             </div>
 
@@ -360,7 +423,7 @@ export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProp
               onChange={(e) => setStableInput(e.target.value)}
               placeholder={
                 isEditing
-                  ? 'Paste NEW items here to add to your stable...'
+                  ? 'Paste additional items here...'
                   : 'Paste items here, separated by a new line.\nExample:\nItem 1\nItem 2\nItem 3'
               }
               className={`w-full bg-brand-bg border rounded-lg px-4 py-3 text-brand-text placeholder-brand-text/20 focus:outline-none transition-all resize-y font-mono text-sm leading-relaxed ${
