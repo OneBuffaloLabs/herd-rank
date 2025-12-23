@@ -1,23 +1,33 @@
-// Define valid board types for the union
+// Define valid board types
 export type BoardType = 'tier' | 'bracket' | 'gauntlet';
 
-// Interface for the Board (The container)
-export interface TierBoard {
-  id?: number; // Auto-incrementing ID
-  title: string; // User-defined title (e.g., "Best 90s Movies")
-  type: BoardType; // The mode (Tier List vs Bracket)
-  currentTheme: string; // Theme ID (e.g., "electric-tundra")
-  createdAt: number; // Timestamp
-  updatedAt: number; // Timestamp (Used for sorting Recents)
-  isArchived?: boolean; // Soft delete flag
+// NEW: Interface for a single Tier Row definition (Color & Label)
+export interface TierDefinition {
+  id: string; // UUID for the row
+  label: string; // e.g., "S", "God Tier"
+  color: string; // Hex code
 }
 
-// Interface for Items (The ranked entities)
+// Updated Board Interface
+export interface TierBoard {
+  id?: number;
+  title: string;
+  type: BoardType;
+  currentTheme: string;
+  createdAt: number;
+  updatedAt: number;
+  isArchived?: boolean;
+
+  // NEW: Store the custom rows here
+  tiers?: TierDefinition[];
+}
+
+// Interface for Items (unchanged)
 export interface TierItem {
-  id?: number; // Auto-incrementing ID
-  boardId: number; // Foreign Key to TierBoard
-  text: string; // Label text
-  imageBlob?: Blob; // Binary data for local images (No URLs required)
-  rank: string; // Current rank ID (e.g., "S", "A", "trash")
-  order: number; // Sort order within the rank
+  id?: number;
+  boardId: number;
+  text: string;
+  imageBlob?: Blob;
+  rank: string; // Will match the 'id' from TierDefinition
+  order: number;
 }
