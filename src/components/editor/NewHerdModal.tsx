@@ -36,7 +36,6 @@ interface NewHerdModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialBoard?: TierBoard;
-  // NEW: Accept items for editing
   initialItems?: TierItem[];
 }
 
@@ -50,7 +49,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
   const [tiers, setTiers] = useState<TierConfig[]>(DEFAULT_TIERS);
   const [stableInput, setStableInput] = useState('');
 
-  // NEW: State for editing existing items
   const [existingItems, setExistingItems] = useState<TierItem[]>([]);
   const [deletedItemIds, setDeletedItemIds] = useState<number[]>([]);
 
@@ -64,7 +62,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
       if (initialBoard.tiers) {
         setTiers(initialBoard.tiers);
       }
-      // Load only unranked items for editing
       if (initialItems) {
         setExistingItems(initialItems.filter((i) => i.rank === 'unranked'));
         setDeletedItemIds([]);
@@ -99,7 +96,7 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
     const nextColorIndex = tiers.length % DEFAULT_TIER_COLORS.length;
     setTiers([
       ...tiers,
-      { id: uuidv4(), label: 'New Tier', color: DEFAULT_TIER_COLORS[nextColorIndex] },
+      { id: uuidv4(), label: 'New', color: DEFAULT_TIER_COLORS[nextColorIndex] },
     ]);
   };
 
@@ -112,7 +109,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
     setTiers(tiers.map((t) => (t.id === id ? { ...t, [field]: value } : t)));
   };
 
-  // --- Item Edit Handlers ---
   const handleExistingItemChange = (id: number, text: string) => {
     setExistingItems(existingItems.map((i) => (i.id === id ? { ...i, text } : i)));
   };
@@ -131,7 +127,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
 
     if (!herdTitle.trim()) newErrors.title = 'Title is required';
 
-    // Check total items (existing non-deleted + new)
     const totalItems = existingItems.length + rawNewItems.length;
 
     if (totalItems < 3) {
@@ -153,27 +148,21 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
         .filter((s) => s.length > 0);
 
       if (isEditing && initialBoard && initialBoard.id) {
-        // --- UPDATE MODE ---
         await db.transaction('rw', db.boards, db.items, async () => {
-          // 1. Update Board
           await db.boards.update(initialBoard.id!, {
             title: herdTitle.trim(),
             tiers: tiers,
             updatedAt: Date.now(),
           });
 
-          // 2. Update Changed Existing Items
-          // We only put items that haven't been deleted
           if (existingItems.length > 0) {
             await db.items.bulkPut(existingItems);
           }
 
-          // 3. Delete Removed Items
           if (deletedItemIds.length > 0) {
             await db.items.bulkDelete(deletedItemIds);
           }
 
-          // 4. Add NEW items
           if (rawItems.length > 0) {
             const itemsToAdd: TierItem[] = rawItems.map((text, index) => ({
               boardId: initialBoard.id!,
@@ -184,10 +173,9 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
             await db.items.bulkAdd(itemsToAdd);
           }
         });
-        setStableInput(''); // Clear the "Add New" box
+        setStableInput('');
         onClose();
       } else {
-        // --- CREATE MODE ---
         const newBoard: TierBoard = {
           title: herdTitle.trim(),
           type: selectedMode,
@@ -242,7 +230,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-thin scrollbar-thumb-brand-secondary/50 scrollbar-track-brand-bg">
-          {/* Title */}
           <section>
             <label
               htmlFor="herdTitle"
@@ -269,7 +256,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
             )}
           </section>
 
-          {/* Mode Selection (Locked if Editing) */}
           <section className={isEditing ? 'opacity-50 pointer-events-none grayscale' : ''}>
             <span className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-3">
               Ranking Mode {isEditing && '(Locked)'}
@@ -304,7 +290,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
             </div>
           </section>
 
-          {/* Tier Config */}
           {selectedMode === 'tier' && (
             <section className="animate-fadeIn">
               <div className="flex items-center justify-between mb-3">
@@ -333,12 +318,14 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
                         />
                       </div>
                     </div>
+                    {/* UPDATED: Added maxLength to prevent UI overflow */}
                     <input
                       type="text"
                       value={tier.label}
                       onChange={(e) => handleTierChange(tier.id, 'label', e.target.value)}
+                      maxLength={15}
                       className="flex-1 bg-transparent border-none focus:ring-0 text-brand-text font-bold placeholder-brand-text/20"
-                      placeholder="Tier Label"
+                      placeholder="Label (Max 15)"
                     />
                     <button
                       onClick={() => handleRemoveTier(tier.id)}
@@ -361,7 +348,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
             </section>
           )}
 
-          {/* EDIT MODE: Manage Existing Items */}
           {isEditing && existingItems.length > 0 && (
             <section className="animate-fadeIn">
               <div className="flex justify-between mb-3">
@@ -396,7 +382,6 @@ export function NewHerdModal({ isOpen, onClose, initialBoard, initialItems }: Ne
             </section>
           )}
 
-          {/* Stable Init / Add More */}
           <section>
             <div className="flex justify-between mb-3">
               <label
