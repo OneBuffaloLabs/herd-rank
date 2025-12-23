@@ -28,8 +28,6 @@ import {
   DragEndEvent,
   pointerWithin,
   CollisionDetection,
-  getFirstCollision,
-  rectIntersection,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 

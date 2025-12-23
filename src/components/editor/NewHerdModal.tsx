@@ -20,7 +20,7 @@ import { db } from '@/db';
 import { BoardType, TierBoard, TierItem, TierDefinition } from '@/db/schema';
 
 type ModeSelection = BoardType;
-interface TierConfig extends TierDefinition {}
+type TierConfig = TierDefinition;
 
 const DEFAULT_TIER_COLORS = ['#c60c30', '#ff6b35', '#f7c548', '#3a86ff', '#8338ec', '#a1a1aa'];
 const DEFAULT_TIERS: TierConfig[] = [
