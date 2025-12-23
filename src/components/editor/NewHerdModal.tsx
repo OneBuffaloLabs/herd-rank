@@ -12,17 +12,18 @@ import {
   faTrash,
   faPalette,
   faExclamationCircle,
+  faSave,
 } from '@fortawesome/free-solid-svg-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '@/db';
 import { BoardType, TierBoard, TierItem, TierDefinition } from '@/db/schema';
 
+// --- Types ---
 type ModeSelection = BoardType;
-
 interface TierConfig extends TierDefinition {}
 
+// --- Defaults ---
 const DEFAULT_TIER_COLORS = ['#c60c30', '#ff6b35', '#f7c548', '#3a86ff', '#8338ec', '#a1a1aa'];
-
 const DEFAULT_TIERS: TierConfig[] = [
   { id: uuidv4(), label: 'S', color: DEFAULT_TIER_COLORS[0] },
   { id: uuidv4(), label: 'A', color: DEFAULT_TIER_COLORS[1] },
@@ -35,12 +36,16 @@ const DEFAULT_TIERS: TierConfig[] = [
 interface NewHerdModalProps {
   isOpen: boolean;
   onClose: () => void;
+  // NEW: Optional props for Edit Mode
+  initialBoard?: TierBoard;
 }
 
-export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
+export function NewHerdModal({ isOpen, onClose, initialBoard }: NewHerdModalProps) {
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
+  const isEditing = !!initialBoard;
 
+  // --- Form State ---
   const [herdTitle, setHerdTitle] = useState('');
   const [selectedMode, setSelectedMode] = useState<ModeSelection>('tier');
   const [tiers, setTiers] = useState<TierConfig[]>(DEFAULT_TIERS);
@@ -48,6 +53,25 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ title?: string; stable?: string }>({});
 
+  // --- Load Initial Data (Edit Mode) ---
+  useEffect(() => {
+    if (isOpen && initialBoard) {
+      setHerdTitle(initialBoard.title);
+      setSelectedMode(initialBoard.type);
+      if (initialBoard.tiers) {
+        setTiers(initialBoard.tiers);
+      }
+      // Note: We do NOT load existing items into stableInput to avoid data loss.
+      // stableInput remains empty for "Add More" functionality.
+    } else if (isOpen && !initialBoard) {
+      // Reset for Create Mode
+      setHerdTitle('');
+      setTiers(DEFAULT_TIERS);
+      setStableInput('');
+    }
+  }, [isOpen, initialBoard]);
+
+  // --- Focus Trap ---
   useEffect(() => {
     if (isOpen) {
       modalRef.current?.focus();
@@ -66,6 +90,7 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
 
   if (!isOpen) return null;
 
+  // --- Handlers ---
   const handleAddTier = () => {
     const nextColorIndex = tiers.length % DEFAULT_TIER_COLORS.length;
     setTiers([
@@ -91,51 +116,77 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
       .filter((s) => s.length > 0);
 
     if (!herdTitle.trim()) newErrors.title = 'Title is required';
-    if (rawItems.length < 3) newErrors.stable = 'Please add at least 3 items to rank';
+
+    // Only enforce 3 items on creation, not editing (unless they want to add more)
+    if (!isEditing && rawItems.length < 3) {
+      newErrors.stable = 'Please add at least 3 items to start';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleCreateHerd = async () => {
+  const handleSave = async () => {
     if (!validate()) return;
     setIsSubmitting(true);
 
     try {
-      const newBoard: TierBoard = {
-        title: herdTitle.trim(),
-        type: selectedMode,
-        currentTheme: 'modern-tundra',
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-        isArchived: false,
-        tiers: selectedMode === 'tier' ? tiers : undefined,
-      };
-
       const rawItems = stableInput
         .split('\n')
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
 
-      const newBoardId = await db.transaction('rw', db.boards, db.items, async () => {
-        const boardId = await db.boards.add(newBoard);
-        const itemsToAdd: TierItem[] = rawItems.map((text, index) => ({
-          boardId: boardId,
-          text: text,
-          rank: 'unranked',
-          order: index,
-        }));
-        if (itemsToAdd.length > 0) await db.items.bulkAdd(itemsToAdd);
-        return boardId;
-      });
+      if (isEditing && initialBoard && initialBoard.id) {
+        // --- UPDATE MODE ---
+        await db.transaction('rw', db.boards, db.items, async () => {
+          // 1. Update Board
+          await db.boards.update(initialBoard.id!, {
+            title: herdTitle.trim(),
+            tiers: tiers,
+            updatedAt: Date.now(),
+          });
 
-      // CRITICAL FIX: Do NOT call onClose() here.
-      // Let the router push handle the unmounting of the component.
-      // Calling onClose() triggers the parent to redirect to '/' which races with this push.
-      router.push(`/editor?id=${newBoardId}`);
+          // 2. Add NEW items (if any)
+          if (rawItems.length > 0) {
+            const itemsToAdd: TierItem[] = rawItems.map((text, index) => ({
+              boardId: initialBoard.id!,
+              text: text,
+              rank: 'unranked',
+              order: Date.now() + index, // Ensure they go to end
+            }));
+            await db.items.bulkAdd(itemsToAdd);
+          }
+        });
+        onClose(); // Close modal and stay on page
+      } else {
+        // --- CREATE MODE ---
+        const newBoard: TierBoard = {
+          title: herdTitle.trim(),
+          type: selectedMode,
+          currentTheme: 'modern-tundra',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          isArchived: false,
+          tiers: selectedMode === 'tier' ? tiers : undefined,
+        };
+
+        const newBoardId = await db.transaction('rw', db.boards, db.items, async () => {
+          const boardId = await db.boards.add(newBoard);
+          const itemsToAdd: TierItem[] = rawItems.map((text, index) => ({
+            boardId: boardId,
+            text: text,
+            rank: 'unranked',
+            order: index,
+          }));
+          await db.items.bulkAdd(itemsToAdd);
+          return boardId;
+        });
+        router.push(`/editor?id=${newBoardId}`);
+      }
     } catch (error) {
-      console.error('Failed to create herd:', error);
-      alert('Error creating herd. Please check console.');
+      console.error('Failed to save herd:', error);
+      alert('Error saving. Check console.');
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -151,7 +202,9 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
         tabIndex={-1}
         className="w-full max-w-2xl max-h-[90vh] bg-brand-surface border border-brand-secondary/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scaleIn outline-none">
         <div className="flex items-center justify-between p-6 border-b border-brand-text/5 bg-brand-bg/50">
-          <h2 className="text-xl font-bold text-brand-text">Assemble a New Herd</h2>
+          <h2 className="text-xl font-bold text-brand-text">
+            {isEditing ? 'Edit Herd Settings' : 'Assemble a New Herd'}
+          </h2>
           <button
             onClick={onClose}
             className="w-8 h-8 flex items-center justify-center rounded-full text-brand-text-muted hover:text-brand-text hover:bg-brand-text/10 transition-colors cursor-pointer"
@@ -173,13 +226,13 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
               type="text"
               value={herdTitle}
               onChange={(e) => setHerdTitle(e.target.value)}
-              placeholder="e.g. Best N64 Games, Office Lunch Spots..."
+              placeholder="e.g. Best N64 Games"
               className={`w-full bg-brand-bg border rounded-lg px-4 py-3 text-brand-text focus:outline-none transition-all font-medium ${
                 errors.title
                   ? 'border-brand-accent focus:ring-brand-accent'
                   : 'border-brand-text/10 focus:border-brand-primary focus:ring-1 focus:ring-brand-primary'
               }`}
-              autoFocus
+              autoFocus={!isEditing}
             />
             {errors.title && (
               <p className="text-brand-accent text-xs mt-2 font-bold">
@@ -188,10 +241,10 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
             )}
           </section>
 
-          {/* Mode Selection */}
-          <section>
+          {/* Mode Selection (Locked if Editing) */}
+          <section className={isEditing ? 'opacity-50 pointer-events-none grayscale' : ''}>
             <span className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider mb-3">
-              Ranking Mode
+              Ranking Mode {isEditing && '(Locked)'}
             </span>
             <div className="grid grid-cols-3 gap-4">
               <button
@@ -209,7 +262,6 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
                 />
                 <h3 className="font-bold mb-1">Tier List</h3>
               </button>
-              {/* Disabled Modes */}
               {[
                 { mode: 'bracket', icon: faTrophy, label: 'Bracket' },
                 { mode: 'gauntlet', icon: faGavel, label: 'Gauntlet' },
@@ -217,11 +269,6 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
                 <div
                   key={item.label}
                   className="p-4 rounded-xl border bg-brand-bg/50 border-brand-text/5 text-brand-text-muted/30 cursor-not-allowed relative overflow-hidden grayscale opacity-70">
-                  <div className="absolute inset-0 bg-brand-bg/80 z-10 flex items-center justify-center">
-                    <span className="text-[10px] font-bold uppercase tracking-widest bg-brand-surface px-2 py-1 rounded border border-brand-text/10">
-                      Coming Soon
-                    </span>
-                  </div>
                   <FontAwesomeIcon icon={item.icon} className="text-2xl mb-3 opacity-50" />
                   <h3 className="font-bold mb-1">{item.label}</h3>
                 </div>
@@ -236,10 +283,9 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
                 <span className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider">
                   Tier Configuration
                 </span>
-                <span className="text-xs text-brand-text-muted/50">{tiers.length} defined</span>
               </div>
               <div className="space-y-3 mb-4">
-                {tiers.map((tier, index) => (
+                {tiers.map((tier) => (
                   <div
                     key={tier.id}
                     className="flex items-center gap-3 bg-brand-bg p-2 rounded-lg border border-brand-text/5 group focus-within:border-brand-primary/50 transition-colors">
@@ -287,13 +333,14 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
             </section>
           )}
 
-          {/* Stable Init */}
+          {/* Stable Init / Add More */}
           <section>
             <div className="flex justify-between mb-3">
               <label
                 htmlFor="stableInput"
                 className="block text-xs font-bold text-brand-text-muted uppercase tracking-wider cursor-pointer">
-                Populate the Stable <span className="text-brand-accent">*</span>
+                {isEditing ? 'Add More Items' : 'Populate the Stable'}{' '}
+                <span className={isEditing ? 'hidden' : 'text-brand-accent'}>*</span>
               </label>
               <span
                 className={`text-xs font-bold ${
@@ -301,7 +348,8 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
                     ? 'text-brand-primary'
                     : 'text-brand-text-muted'
                 }`}>
-                {stableInput.split('\n').filter((s) => s.trim()).length} / 3 Required
+                {stableInput.split('\n').filter((s) => s.trim()).length}{' '}
+                {isEditing ? 'Adding' : '/ 3 Required'}
               </span>
             </div>
 
@@ -311,7 +359,9 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
               value={stableInput}
               onChange={(e) => setStableInput(e.target.value)}
               placeholder={
-                'Paste items here, separated by a new line.\nExample:\nItem 1\nItem 2\nItem 3'
+                isEditing
+                  ? 'Paste NEW items here to add to your stable...'
+                  : 'Paste items here, separated by a new line.\nExample:\nItem 1\nItem 2\nItem 3'
               }
               className={`w-full bg-brand-bg border rounded-lg px-4 py-3 text-brand-text placeholder-brand-text/20 focus:outline-none transition-all resize-y font-mono text-sm leading-relaxed ${
                 errors.stable
@@ -334,14 +384,15 @@ export function NewHerdModal({ isOpen, onClose }: NewHerdModalProps) {
             Cancel
           </button>
           <button
-            onClick={handleCreateHerd}
+            onClick={handleSave}
             disabled={isSubmitting}
             className="px-8 py-3 bg-brand-primary text-white font-bold rounded-lg transition-all shadow-lg flex items-center gap-2 hover:bg-brand-primary/90 hover:scale-[1.02] shadow-brand-primary/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
             {isSubmitting ? (
-              <span className="animate-pulse">Creating...</span>
+              <span className="animate-pulse">Saving...</span>
             ) : (
               <>
-                <FontAwesomeIcon icon={faPlus} /> Create Herd
+                <FontAwesomeIcon icon={isEditing ? faSave : faPlus} />{' '}
+                {isEditing ? 'Save Changes' : 'Create Herd'}
               </>
             )}
           </button>

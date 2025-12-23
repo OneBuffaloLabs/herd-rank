@@ -5,10 +5,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSave, faShareNodes, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faSave, faShareNodes, faSpinner, faGear } from '@fortawesome/free-solid-svg-icons';
 
 // Component Imports
-import { ControlHub } from '@/components/editor/ControlHub';
 import { TheStable } from '@/components/editor/TheStable';
 import { NewHerdModal } from '@/components/editor/NewHerdModal';
 
@@ -18,12 +17,13 @@ export default function EditorPage() {
 
   const boardId = searchParams.get('id');
   const numericId = boardId ? parseInt(boardId, 10) : undefined;
-  const [mode, setMode] = useState<'manual' | 'gauntlet' | 'bracket'>('manual');
 
-  // Fetch Board
+  // Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+
+  // Fetch Data
   const board = useLiveQuery(() => (numericId ? db.boards.get(numericId) : undefined), [numericId]);
 
-  // Fetch Items
   const items =
     useLiveQuery(
       () => (numericId ? db.items.where('boardId').equals(numericId).toArray() : []),
@@ -33,14 +33,25 @@ export default function EditorPage() {
   const isCreatingNew = !boardId;
   const isLoading = !!boardId && !board;
 
+  // Determine if modal should be open (either creating new, or user clicked settings)
+  const isModalOpen = isCreatingNew || showEditModal;
+
   const handleCloseModal = () => {
-    if (!boardId) router.push('/');
+    if (isCreatingNew) {
+      router.push('/');
+    } else {
+      setShowEditModal(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-brand-bg flex flex-col relative">
-      {/* Creation Modal */}
-      <NewHerdModal isOpen={isCreatingNew} onClose={handleCloseModal} />
+      {/* Modal handles both Create and Edit based on props */}
+      <NewHerdModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        initialBoard={showEditModal ? board : undefined}
+      />
 
       {/* Header */}
       <header className="sticky top-0 z-20 bg-brand-bg/95 backdrop-blur border-b border-brand-text/5 px-8 py-4 flex items-center justify-between">
@@ -60,6 +71,16 @@ export default function EditorPage() {
         </div>
 
         <div className="flex gap-3">
+          {/* Settings Button */}
+          {!isCreatingNew && (
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="w-10 h-10 bg-brand-surface border border-brand-text/10 rounded-lg text-brand-text-muted hover:text-brand-text hover:border-brand-primary hover:bg-brand-primary/10 transition-all flex items-center justify-center cursor-pointer"
+              title="Herd Settings">
+              <FontAwesomeIcon icon={faGear} />
+            </button>
+          )}
+
           <button className="px-4 py-2 bg-brand-surface border border-brand-text/10 rounded-lg text-sm font-bold text-brand-text hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all flex items-center gap-2 cursor-pointer">
             <FontAwesomeIcon icon={faSave} />
             <span className="hidden sm:inline">Export</span>
@@ -80,17 +101,12 @@ export default function EditorPage() {
           <div
             key={tier.id}
             className="flex min-h-[120px] bg-brand-surface border border-brand-text/5 rounded-xl overflow-hidden shadow-sm">
-            {/* TIER LABEL FIX:
-               Removed 'sticky top-24' which was pushing the text down 96px inside the box.
-               Now simply centered via flexbox.
-            */}
             <div
               className="w-24 md:w-32 flex-shrink-0 flex items-center justify-center text-brand-bg font-black text-3xl md:text-4xl shadow-lg relative"
               style={{ backgroundColor: tier.color }}>
               <span className="text-center break-words px-2 drop-shadow-md">{tier.label}</span>
             </div>
 
-            {/* Drop Zone */}
             <div className="flex-1 p-4 flex items-center justify-center border-l border-black/10">
               <div className="w-full h-full border-2 border-dashed border-brand-text/5 rounded-lg flex items-center justify-center text-brand-text-muted/20 text-sm font-bold uppercase tracking-widest">
                 Drop {tier.label} Items Here
@@ -105,8 +121,6 @@ export default function EditorPage() {
           </div>
         )}
       </main>
-
-      {!isCreatingNew && <ControlHub currentMode={mode} onModeChange={setMode} />}
 
       {/* Connected Stable with Real Items */}
       <TheStable items={items} />
